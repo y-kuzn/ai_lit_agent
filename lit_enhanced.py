@@ -242,28 +242,30 @@ if st.button("🚀 Fetch & Analyze Articles"):
                 st.markdown("**🏷️ Tags:** " + ", ".join(tags))
 
 # Export options
-st.download_button(
-    "📥 Export BibTeX",
-    format_bibtex({
-        'title': title,
-        'creators': parse_authors(authors_info),
-        'abstractNote': summary,
-        'url': url
-    }),
-    file_name=f"{title.replace(' ', '_')}.bib"
-)
-st.download_button(
-    "📥 Export Markdown",
-    format_markdown({
-        'title': title,
-        'creators': parse_authors(authors_info),
-        'abstractNote': summary,
-        'url': url
-    }),
-    file_name=f"{title.replace(' ', '_')}.md"
-)
+if title and title.strip():
+    st.download_button(
+        "📥 Export BibTeX",
+        format_bibtex({
+            'title': title,
+            'creators': parse_authors(authors_info),
+            'abstractNote': summary,
+            'url': url
+        }),
+        file_name=f"{title.replace(' ', '_')}.bib"
+    )
 
-st.markdown("---")
+    st.download_button(
+        "📥 Export Markdown",
+        format_markdown({
+            'title': title,
+            'creators': parse_authors(authors_info),
+            'abstractNote': summary,
+            'url': url
+        }),
+        file_name=f"{title.replace(' ', '_')}.md"
+    )
+else:
+    st.warning("⚠️ Cannot export bibliographic data: missing article title.")
 
 # Zotero logic with duplicate check and override
 if score >= min_score and add_to_zotero and zot and user_zotero_collection:
@@ -301,4 +303,5 @@ if score >= min_score and add_to_zotero and zot and user_zotero_collection:
             st.success(f"✅ Added to Zotero (score {score:.2f})")
         except Exception as e:
             st.error(f"❌ Zotero error: {e}")
+
 
