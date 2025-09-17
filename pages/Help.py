@@ -7,7 +7,7 @@ st.set_page_config(page_title="AI Literature Helper – Help", page_icon="🆘")
 
 # Gemini API setup
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
 
 # Title and instructions
 st.title("🆘 Help & Instructions")
