@@ -5,7 +5,9 @@ from bs4 import BeautifulSoup
 import re
 from pyzotero import zotero
 import fitz  # PyMuPDF
-
+# 🔗 Sidebar link to Help page
+st.sidebar.markdown("📘 Need help?")
+st.sidebar.page_link("pages/Help.py", label="Open Help Page")
 # ---------------------------
 # Configuration
 # ---------------------------
@@ -243,4 +245,5 @@ if st.button("🚀 Fetch & Analyze Articles"):
                     st.success(f"✅ Added to Zotero (score {score})")
                 except Exception as e:
                     st.error(f"❌ Zotero error: {e}")
+
 
