@@ -49,9 +49,6 @@ GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini
 # ---------------------------
 # Streamlit GUI
 # ---------------------------
-# ---------------------------
-# UI Inputs
-# ---------------------------
 st.title("📚 AI Literature Helper")
 st.markdown("Search academic papers, analyze relevance with Gemini, and optionally save to Zotero.")
 
@@ -236,43 +233,33 @@ if st.button("🚀 Fetch & Analyze Articles"):
                 st.error(f"Gemini API error: {e}")
                 tags, summary, score, reasoning = [], "", 0.0, ""
 
-                st.markdown(f"### 📄 [{title}]({url})")
-                st.markdown(f"**Authors:** {authors_info}")
-                st.markdown(f"**Snippet:** {snippet}")
-                st.markdown(f"**🔢 AI Relevance Score:** {score:.2f}")
-                st.markdown(f"**🧠 Gemini Reasoning:** {reasoning}")
-            if tags:
-                st.markdown("**🏷️ Tags:** " + ", ".join(tags))
-
-            # Export options (only if title is valid)
-            if title and title.strip():
-                st.download_button(
-                    "📥 Export BibTeX",
-                    format_bibtex({
-                        'title': title,
-                        'creators': parse_authors(authors_info),
-                        'abstractNote': summary,
-                        'url': url
-                    }),
-                    file_name=f"{title.replace(' ', '_')}.bib"
-                )
-
-                st.download_button(
-                    "📥 Export Markdown",
-                    format_markdown({
-                        'title': title,
-                        'creators': parse_authors(authors_info),
-                        'abstractNote': summary,
-                        'url': url
-                    }),
-                    file_name=f"{title.replace(' ', '_')}.md"
-                )
-            else:
-                st.warning("⚠️ Cannot export bibliographic data: missing article title.")
+            st.markdown(f"### 📄 [{title}]({url})")
+            st.markdown(f"**Authors:** {authors_info}")
+            st.markdown(f"**Snippet:** {snippet}")
+            st.markdown(f"**Gemini Insight:** {reasoning}")
+            st.download_button(
+                "📥 Export BibTeX",
+                format_bibtex({
+                    'title': title,
+                    'creators': parse_authors(authors_info),
+                    'abstractNote': summary,
+                    'url': url
+                }),
+                file_name=f"{title.replace(' ', '_')}.bib"
+            )
+            st.download_button(
+                "📥 Export Markdown",
+                format_markdown({
+                    'title': title,
+                    'creators': parse_authors(authors_info),
+                    'abstractNote': summary,
+                    'url': url
+                }),
+                file_name=f"{title.replace(' ', '_')}.md"
+            )
 
             st.markdown("---")
 
-            # Zotero logic with duplicate check and user override
             if score >= min_score and add_to_zotero and zot and user_zotero_collection:
                 item = {
                     'itemType': 'journalArticle',
@@ -283,30 +270,10 @@ if st.button("🚀 Fetch & Analyze Articles"):
                     'url': url,
                     'collections': [user_zotero_collection]
                 }
-
-                duplicate_found = False
                 try:
-                    existing_items = zot.items(q=title, itemType="journalArticle")
-                    for existing in existing_items:
-                        if "title" in existing["data"] and existing["data"]["title"].strip().lower() == title.strip().lower():
-                            duplicate_found = True
-                            break
+                    zot.create_items([item])
+                    st.success(f"✅ Added to Zotero (score {score})")
                 except Exception as e:
-                    st.warning(f"⚠️ Zotero duplicate check failed: {e}")
-
-                if duplicate_found:
-                    st.warning("⚠️ This article may already exist in your Zotero library.")
-                    if st.checkbox(f"✅ Add anyway: {title}", key=f"add_{title}"):
-                        try:
-                            zot.create_items([item])
-                            st.success(f"✅ Added to Zotero (score {score:.2f})")
-                        except Exception as e:
-                            st.error(f"❌ Zotero error: {e}")
-                else:
-                    try:
-                        zot.create_items([item])
-                        st.success(f"✅ Added to Zotero (score {score:.2f})")
-                    except Exception as e:
-                        st.error(f"❌ Zotero error: {e}")
+                    st.error(f"❌ Zotero error: {e}")
 
 
