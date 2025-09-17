@@ -1,90 +1,87 @@
 import streamlit as st
-import requests
-import json
 
-# Page config
-st.set_page_config(page_title="AI Literature Helper – Help", page_icon="🆘")
+# Page setup
+st.set_page_config(page_title="AI Literature Helper – Help", page_icon="🆘", layout="wide")
 
-# Gemini API setup
-GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+# Sidebar navigation
+st.sidebar.title("📘 Help Navigation")
+section = st.sidebar.radio("Jump to section:", [
+    "Overview",
+    "How to Use",
+    "API Setup",
+    "Zotero Integration",
+    "Troubleshooting",
+    "Contact"
+])
 
-# Title and instructions
-st.title("🆘 Help & Instructions")
+# Section: Overview
+if section == "Overview":
+    st.title("🆘 Help & Instructions")
+    st.markdown("""
+    Welcome to **AI Literature Helper**, your personal research assistant powered by Gemini and Streamlit.
 
-st.markdown("""
-Welcome to the **AI Literature Helper**! This tool helps you find, analyze, and organize academic papers using AI.
+    This app helps you:
+    - Search academic papers from Google Scholar or Semantic Scholar
+    - Analyze relevance using Gemini AI
+    - Export citations in BibTeX or Markdown
+    - Save papers directly to Zotero
 
----
+    Whether you're a student, researcher, or curious mind, this tool is designed to streamline your literature review process.
+    """)
 
-### 🚀 How to Use the App
+# Section: How to Use
+elif section == "How to Use":
+    st.header("🚀 How to Use the App")
+    st.markdown("""
+    1. **Enter your research topic** in the input field.
+    2. **Choose a source**: Google Scholar or Semantic Scholar.
+    3. **Set the number of papers** to fetch and your minimum relevance score.
+    4. **Optionally connect Zotero** to save papers directly to your library.
+    5. Click **Fetch & Analyze Articles** to begin.
 
-1. **Enter your research topic** in the main input field.
-2. **Choose a source**: Google Scholar or Semantic Scholar.
-3. **Set the number of papers** to fetch and your minimum relevance score.
-4. **Optionally connect Zotero** to save papers directly to your library.
-5. Click **Fetch & Analyze Articles** to begin.
+    After analysis, you’ll see:
+    - AI-generated tags
+    - Summary and relevance score
+    - Export buttons for BibTeX and Markdown
+    """)
+    
+# Section: Zotero Integration
+elif section == "Zotero Integration":
+    st.header("📥 Zotero Integration")
+    st.markdown("""
+    Zotero is a free reference manager. You can connect it to this app to automatically save relevant papers.
 
----
+    ### 🔧 What You Need
+    - **Zotero API Key**: [Generate here](https://www.zotero.org/settings/keys)
+    - **User ID**: Found in your Zotero account settings
+    - **Collection ID**: Go to your Zotero library → right-click a collection → “Edit Collection” → copy the ID from the URL
 
-### 📦 Export Options
+    ### 📝 Add to Secrets
+    ```toml
+    ZOTERO_API_KEY = "your_zotero_key"
+    ZOTERO_USER_ID = "your_user_id"
+    ZOTERO_COLLECTION_ID = "your_collection_id"
+    ```
 
-- **BibTeX**: For citation managers like Zotero, Mendeley, or EndNote.
-- **Markdown**: For notes, documentation, or sharing summaries.
+    ### ✅ What Gets Saved
+    - Only papers with a relevance score ≥ your threshold
+    - Includes title, authors, abstract, tags, and URL
 
----
+    > ⚠️ Zotero does not accept empty fields. Make sure your metadata is complete.
+    """)
 
-### 🔐 Zotero Integration
+# Section: Contact
+elif section == "Contact":
+    st.header("📬 Contact & Feedback")
+    st.markdown("""
+    Have questions, suggestions, or found a bug?
 
-To save papers directly to Zotero:
-- Provide your **Zotero API key**, **User ID**, and **Collection ID**.
-- Only papers with a relevance score ≥ your threshold will be saved.
+    - Open an issue on [GitHub](https://github.com/y-kuzn/ai_lit_agent/issues)
+    - Email the developer at: `kuzn0001@e.ntu.edu.sg`
+    - Or leave feedback directly in the app (coming soon!)
 
----
+    We’re constantly improving the AI Literature Helper—your input helps make it better.
+    """)
 
-### 🛠️ Troubleshooting
-
-- **Missing modules**: Make sure your `requirements.txt` includes all dependencies.
-- **API errors**: Double-check your keys in `.streamlit/secrets.toml` or Streamlit Cloud secrets.
-- **Gemini issues**: Try shorter prompts or switch to the `gemini-2.0-flash` model.
-
----
-
-### 💬 Ask Gemini for Help
-""")
-
-# Chatbot section
-st.subheader("💬 Gemini Assistant")
-
-# Initialize chat history
-if "help_chat" not in st.session_state:
-    st.session_state.help_chat = []
-
-# Chat input
-user_input = st.chat_input("Ask a question about using the app...")
-
-if user_input:
-    st.session_state.help_chat.append({"role": "user", "text": user_input})
-
-    # Prepare Gemini prompt
-    messages = [{"role": "user", "parts": [{"text": m["text"]}]} for m in st.session_state.help_chat if m["role"] == "user"]
-    payload = {"contents": messages}
-    headers = {
-        "Content-Type": "application/json",
-        "X-goog-api-key": GEMINI_API_KEY
-    }
-
-    try:
-        with st.spinner("Gemini is thinking..."):
-            response = requests.post(GEMINI_API_URL, headers=headers, json=payload)
-            response.raise_for_status()
-            reply = response.json()["candidates"][0]["content"]["parts"][0]["text"]
-            st.session_state.help_chat.append({"role": "assistant", "text": reply})
-    except requests.exceptions.HTTPError as e:
-        status = e.response.status_code
-        reason = e.response.reason
-        st.error(f"Gemini API error: {status} – {reason}")
-        st.stop()
-    except Exception as e:
-        st.error(f"Unexpected error: {e}")
-        st.stop()
+    st.markdown("---")
+    st.markdown("Made with ❤️ using Streamlit and Gemini")
