@@ -6,7 +6,29 @@ import re
 from pyzotero import zotero
 import fitz  # PyMuPDF
 # 🔗 Sidebar link to Help page
-st.sidebar.markdown("📘 Need help? [Open Help Page](./Help)")
+st.sidebar.markdown("---")
+
+st.sidebar.markdown("""
+<div style="text-align: center;">
+    <a href="https://ntu-ai-literature-search-question.streamlit.app/" target="_blank">
+        <button style="
+            background-color: #ff4b5c;
+            color: white;
+            padding: 14px 28px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        " onmouseover="this.style.backgroundColor='#e63946'; this.style.transform='scale(1.05)'" onmouseout="this.style.backgroundColor='#ff4b5c'; this.style.transform='scale(1)'">
+            🆘 HELP ME! I’m Lost
+        </button>
+    </a>
+</div>
+""", unsafe_allow_html=True)
 # ---------------------------
 # Configuration
 # ---------------------------
@@ -244,6 +266,7 @@ if st.button("🚀 Fetch & Analyze Articles"):
                     st.success(f"✅ Added to Zotero (score {score})")
                 except Exception as e:
                     st.error(f"❌ Zotero error: {e}")
+
 
 
 
