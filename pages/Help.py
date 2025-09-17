@@ -88,14 +88,3 @@ if user_input:
     except Exception as e:
         st.error(f"Unexpected error: {e}")
         st.stop()
-
-# Display chat history
-for msg in st.session_state.help_chat:
-    if msg["role"] == "user":
-        st.chat_message("user").markdown(msg["text"])
-    else:
-        st.chat_message("assistant").markdown(msg["text"])
-
-        st.chat_message("user").markdown(msg["text"])
-    else:
-        st.chat_message("assistant").markdown(msg["text"])
