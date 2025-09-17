@@ -9,9 +9,9 @@ import fitz  # PyMuPDF
 # ---------------------------
 # Configuration
 # ---------------------------
-SCRAPERAPI_KEY = "438a9a4153a9a0c1b87c6175a589d1c1"
-SEMANTIC_SCHOLAR_API_KEY = "TSMTWf9RIV339uerV5E7LaykV4pDJKdK3HWzes8i"
-GEMINI_API_KEY = "AIzaSyAEsTaEJvcKnwcrrMWSxcE6MIZvhMThlOs"
+SCRAPERAPI_KEY = st.secrets["SCRAPERAPI_KEY"]
+SEMANTIC_SCHOLAR_API_KEY = st.secrets["SEMANTIC_SCHOLAR_API_KEY"]
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 # ---------------------------
@@ -243,3 +243,4 @@ if st.button("🚀 Fetch & Analyze Articles"):
                     st.success(f"✅ Added to Zotero (score {score})")
                 except Exception as e:
                     st.error(f"❌ Zotero error: {e}")
+
