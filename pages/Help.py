@@ -12,7 +12,25 @@ section = st.sidebar.radio("Jump to section:", [
     "Contact"
 ])
 st.sidebar.markdown("---")
-st.sidebar.markdown("🔙 [Go back to Main App](https://ntu-ai-literature-search.streamlit.app/)")
+
+st.sidebar.markdown("""
+<div style="text-align: center;">
+    <a href="https://ntu-ai-literature-search.streamlit.app/" target="_blank">
+        <button style="
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        ">
+            🔙 Go Back to Main App
+        </button>
+    </a>
+</div>
+""", unsafe_allow_html=True)
 
 # Section: Overview
 if section == "Overview":
