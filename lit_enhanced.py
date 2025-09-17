@@ -162,8 +162,8 @@ for i, article in enumerate(articles):
 
 st.download_button("Download BibTeX", bibtex, file_name=f"{article['title']}.bib", mime="text/plain")
 
-        markdown = f"""### {article['title']}
-**Abstract:** {article['abstract']}
+    markdown = f"""### {article['title']}
+    **Abstract:** {article['abstract']}
 
 **Tags:**  
 {analysis}
@@ -190,6 +190,7 @@ st.download_button("Download BibTeX", bibtex, file_name=f"{article['title']}.bib
 if save_to_zotero:
     st.markdown("---")
     st.success(f"📦 Zotero Summary: Saved {saved_count} | Skipped {skipped_count}")
+
 
 
 
