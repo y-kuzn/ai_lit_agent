@@ -8,9 +8,7 @@ st.sidebar.title("📘 Help Navigation")
 section = st.sidebar.radio("Jump to section:", [
     "Overview",
     "How to Use",
-    "API Setup",
     "Zotero Integration",
-    "Troubleshooting",
     "Contact"
 ])
 
