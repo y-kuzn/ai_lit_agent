@@ -11,6 +11,8 @@ section = st.sidebar.radio("Jump to section:", [
     "Zotero Integration",
     "Contact"
 ])
+st.sidebar.markdown("---")
+st.sidebar.markdown("🔙 [Go back to Main App](https://ntu-ai-literature-search.streamlit.app/)")
 
 # Section: Overview
 if section == "Overview":
