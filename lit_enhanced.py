@@ -1,4 +1,4 @@
-import streamlit as st
+fimport streamlit as st
 import requests
 import json
 from bs4 import BeautifulSoup
@@ -222,59 +222,90 @@ if st.button("🚀 Fetch & Analyze Articles"):
             4. Reasoning for the score
             Output as JSON with keys: tags, summary, score, reasoning
             """
+try:
+    text_output = generate_gemini(gemini_prompt)
+    gpt_data = extract_json(text_output)
+    tags = gpt_data.get("tags", [])
+    summary = gpt_data.get("summary", "")
+    score = float(gpt_data.get("score", 0))
+    reasoning = gpt_data.get("reasoning", "")
+except Exception as e:
+    st.error(f"Gemini API error: {e}")
+    tags, summary, score, reasoning = [], "", 0.0, ""
+
+# Display article metadata
+st.markdown(f"### 📄 [{title}]({url})")
+st.markdown(f"**Authors:** {authors_info}")
+st.markdown(f"**Snippet:** {snippet}")
+
+# Display Gemini analysis
+st.markdown(f"**🔢 AI Relevance Score:** {score:.2f}")
+st.markdown(f"**🧠 Gemini Reasoning:** {reasoning}")
+if tags:
+    st.markdown("**🏷️ Tags:** " + ", ".join(tags))
+
+# Export options
+st.download_button(
+    "📥 Export BibTeX",
+    format_bibtex({
+        'title': title,
+        'creators': parse_authors(authors_info),
+        'abstractNote': summary,
+        'url': url
+    }),
+    file_name=f"{title.replace(' ', '_')}.bib"
+)
+st.download_button(
+    "📥 Export Markdown",
+    format_markdown({
+        'title': title,
+        'creators': parse_authors(authors_info),
+        'abstractNote': summary,
+        'url': url
+    }),
+    file_name=f"{title.replace(' ', '_')}.md"
+)
+
+st.markdown("---")
+
+# Zotero logic
+if score >= min_score and add_to_zotero and zot and user_zotero_collection:
+    item = {
+        'itemType': 'journalArticle',
+        'title': title,
+        'creators': parse_authors(authors_info),
+        'abstractNote': summary,
+        'tags': [{'tag': t} for t in tags],
+        'url': url,
+        'collections': [user_zotero_collection]
+    }
+
+    # Check for duplicates
+    duplicate_found = False
+    try:
+        existing_items = zot.items(q=title, itemType="journalArticle")
+        for existing in existing_items:
+            if "title" in existing["data"] and existing["data"]["title"].strip().lower() == title.strip().lower():
+                duplicate_found = True
+                break
+    except Exception as e:
+        st.warning(f"⚠️ Zotero duplicate check failed: {e}")
+
+    if duplicate_found:
+        st.warning("⚠️ This article may already exist in your Zotero library.")
+        if st.checkbox(f"✅ Add anyway: {title}", key=f"add_{title}"):
             try:
-                text_output = generate_gemini(gemini_prompt)
-                gpt_data = extract_json(text_output)
-                tags = gpt_data.get("tags", [])
-                summary = gpt_data.get("summary", "")
-                score = float(gpt_data.get("score", 0))
-                reasoning = gpt_data.get("reasoning", "")
+                zot.create_items([item])
+                st.success(f"✅ Added to Zotero (score {score:.2f})")
             except Exception as e:
-                st.error(f"Gemini API error: {e}")
-                tags, summary, score, reasoning = [], "", 0.0, ""
+                st.error(f"❌ Zotero error: {e}")
+    else:
+        try:
+            zot.create_items([item])
+            st.success(f"✅ Added to Zotero (score {score:.2f})")
+        except Exception as e:
+            st.error(f"❌ Zotero error: {e}")
 
-            st.markdown(f"### 📄 [{title}]({url})")
-            st.markdown(f"**Authors:** {authors_info}")
-            st.markdown(f"**Snippet:** {snippet}")
-            st.markdown(f"**Gemini Insight:** {reasoning}")
-            st.download_button(
-                "📥 Export BibTeX",
-                format_bibtex({
-                    'title': title,
-                    'creators': parse_authors(authors_info),
-                    'abstractNote': summary,
-                    'url': url
-                }),
-                file_name=f"{title.replace(' ', '_')}.bib"
-            )
-            st.download_button(
-                "📥 Export Markdown",
-                format_markdown({
-                    'title': title,
-                    'creators': parse_authors(authors_info),
-                    'abstractNote': summary,
-                    'url': url
-                }),
-                file_name=f"{title.replace(' ', '_')}.md"
-            )
-
-            st.markdown("---")
-
-            if score >= min_score and add_to_zotero and zot and user_zotero_collection:
-                item = {
-                    'itemType': 'journalArticle',
-                    'title': title,
-                    'creators': parse_authors(authors_info),
-                    'abstractNote': summary,
-                    'tags': [{'tag': t} for t in tags],
-                    'url': url,
-                    'collections': [user_zotero_collection]
-                }
-                try:
-                    zot.create_items([item])
-                    st.success(f"✅ Added to Zotero (score {score})")
-                except Exception as e:
-                    st.error(f"❌ Zotero error: {e}")
 
 
 
