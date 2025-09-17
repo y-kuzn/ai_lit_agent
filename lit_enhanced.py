@@ -5,6 +5,15 @@ from bs4 import BeautifulSoup
 import re
 from pyzotero import zotero
 import fitz  # PyMuPDF
+import streamlit as st
+
+st.set_page_config(
+    page_title="AI Literature Helper",   # This sets the browser tab title
+    page_icon="📚",                      # Optional: adds an emoji icon to the tab
+    layout="wide",                       # Optional: use "centered" or "wide"
+    initial_sidebar_state="expanded"     # Optional: "auto", "expanded", or "collapsed"
+)
+
 # 🔗 Sidebar link to Help page
 st.sidebar.markdown("---")
 
@@ -266,6 +275,7 @@ if st.button("🚀 Fetch & Analyze Articles"):
                     st.success(f"✅ Added to Zotero (score {score})")
                 except Exception as e:
                     st.error(f"❌ Zotero error: {e}")
+
 
 
 
