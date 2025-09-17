@@ -5,18 +5,21 @@ from bs4 import BeautifulSoup
 import re
 from pyzotero import zotero
 import fitz  # PyMuPDF
-import streamlit as st
 
+# ---------------------------
+# Page Configuration
+# ---------------------------
 st.set_page_config(
-    page_title="AI Literature Helper",   # This sets the browser tab title
-    page_icon="📚",                      # Optional: adds an emoji icon to the tab
-    layout="wide",                       # Optional: use "centered" or "wide"
-    initial_sidebar_state="expanded"     # Optional: "auto", "expanded", or "collapsed"
+    page_title="AI Literature Helper",
+    page_icon="📚",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# 🔗 Sidebar link to Help page
+# ---------------------------
+# Sidebar: Help Button
+# ---------------------------
 st.sidebar.markdown("---")
-
 st.sidebar.markdown("""
 <div style="text-align: center;">
     <a href="https://ntu-ai-literature-search-question.streamlit.app/" target="_blank">
@@ -38,7 +41,10 @@ st.sidebar.markdown("""
     </a>
 </div>
 """, unsafe_allow_html=True)
-# Sidebar controls
+
+# ---------------------------
+# Sidebar: Controls
+# ---------------------------
 st.sidebar.title("🔧 Settings")
 source = st.sidebar.selectbox("Choose source", ["Google Scholar", "Semantic Scholar", "PubMed"])
 query = st.sidebar.text_input("Enter your research topic")
@@ -46,8 +52,9 @@ num_papers = st.sidebar.slider("Number of papers", 5, 50, 10)
 min_score = st.sidebar.slider("Minimum relevance score", 0.0, 1.0, 0.5)
 save_to_zotero = st.sidebar.checkbox("Save to Zotero", value=False)
 allow_duplicates = st.sidebar.checkbox("Allow duplicate saves", value=False)
+
 # ---------------------------
-# Configuration
+# Secrets Configuration
 # ---------------------------
 SCRAPERAPI_KEY = st.secrets["SCRAPERAPI_KEY"]
 SEMANTIC_SCHOLAR_API_KEY = st.secrets["SEMANTIC_SCHOLAR_API_KEY"]
@@ -55,11 +62,14 @@ GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 # ---------------------------
-# Streamlit GUI
+# Main Title
 # ---------------------------
 st.title("📚 AI Literature Helper")
 st.markdown("Search academic papers, analyze relevance with Gemini, and optionally save to Zotero.")
-# Function to analyze article with Gemini
+
+# ---------------------------
+# Gemini Analysis Function
+# ---------------------------
 def analyze_article(title, abstract):
     prompt = f"Summarize this article and generate 5 relevant tags:\n\nTitle: {title}\nAbstract: {abstract}"
     headers = {
@@ -77,7 +87,9 @@ def analyze_article(title, abstract):
     except Exception as e:
         return f"❌ Gemini error: {e}"
 
-# Function to save to Zotero
+# ---------------------------
+# Zotero Save Function
+# ---------------------------
 def save_article_to_zotero(article, analysis, zotero_client, allow_duplicates):
     title = article["title"]
     doi = article.get("doi", "")
@@ -102,9 +114,10 @@ def save_article_to_zotero(article, analysis, zotero_client, allow_duplicates):
     zotero_client.create_items([zotero_item])
     st.success(f"✅ Saved to Zotero: {title}")
 
-# Simulated article fetch (replace with real API calls)
+# ---------------------------
+# Simulated Article Fetch
+# ---------------------------
 def fetch_articles(query, source, num):
-    # Dummy articles for demonstration
     return [{
         "title": f"{query} Study #{i+1}",
         "abstract": f"This is a simulated abstract for {query} article #{i+1}.",
@@ -112,13 +125,21 @@ def fetch_articles(query, source, num):
         "url": f"https://example.com/{query.replace(' ', '_')}/{i+1}"
     } for i in range(num)]
 
-# Main logic
+# ---------------------------
+# Main Logic
+# ---------------------------
 if query:
-    st.title("📚 AI Literature Results")
+    st.header("📚 AI Literature Results")
     articles = fetch_articles(query, source, num_papers)
 
     if save_to_zotero:
+        ZOTERO_API_KEY = st.secrets["ZOTERO_API_KEY"]
+        ZOTERO_USER_ID = st.secrets["ZOTERO_USER_ID"]
+        ZOTERO_COLLECTION_ID = st.secrets["ZOTERO_COLLECTION_ID"]
         zotero_client = zotero.Zotero(ZOTERO_USER_ID, "user", ZOTERO_API_KEY)
+
+    saved_count = 0
+    skipped_count = 0
 
     for i, article in enumerate(articles):
         st.subheader(f"{i+1}. {article['title']}")
@@ -127,42 +148,22 @@ if query:
 
         with st.spinner("Analyzing with Gemini..."):
             analysis = analyze_article(article["title"], article["abstract"])
-        
+
         st.markdown("**🧠 AI Summary & Tags:**")
         st.code(analysis)
 
-        if save_to_zotero:
-            save_article_to_zotero(article, analysis, zotero_client, allow_duplicates)
-
-# Track save stats
-saved_count = 0
-skipped_count = 0
-
-for i, article in enumerate(articles):
-    st.subheader(f"{i+1}. {article['title']}")
-    st.markdown(f"**Abstract:** {article['abstract']}")
-    st.markdown(f"[🔗 View Article]({article['url']})")
-
-    with st.spinner("Analyzing with Gemini..."):
-        analysis = analyze_article(article["title"], article["abstract"])
-    
-    st.markdown("**🧠 AI Summary & Tags:**")
-    st.code(analysis)
-
-    # Export options
-    with st.expander("📤 Export Options"):
-        bibtex = f"""@article{{{{{article['doi'].split('/')[-1]}}}}},
-      title={{{{ {article['title']} }}}},
-      author={{{{AI Helper}}}},
-      journal={{{{Generated by AI Literature Helper}}}},
-      year={{{{2025}}}},
-      doi={{{{ {article['doi']} }}}},
-      url={{{{ {article['url']} }}}}
+        with st.expander("📤 Export Options"):
+            bibtex = f"""@article{{{{{article['doi'].split('/')[-1]}}}}},
+  title={{{{ {article['title']} }}}},
+  author={{{{AI Helper}}}},
+  journal={{{{Generated by AI Literature Helper}}}},
+  year={{{{2025}}}},
+  doi={{{{ {article['doi']} }}}},
+  url={{{{ {article['url']} }}}}
 }}"""
+            st.download_button("Download BibTeX", bibtex, file_name=f"{article['title']}.bib", mime="text/plain")
 
-st.download_button("Download BibTeX", bibtex, file_name=f"{article['title']}.bib", mime="text/plain")
-
-markdown = f"""### {article['title']}
+            markdown = f"""### {article['title']}
 **Abstract:** {article['abstract']}
 
 **Tags:**  
@@ -170,33 +171,24 @@ markdown = f"""### {article['title']}
 
 [🔗 View Article]({article['url']})
 """
-        st.download_button("Download Markdown", markdown, file_name=f"{article['title']}.md", mime="text/markdown")
+            st.download_button("Download Markdown", markdown, file_name=f"{article['title']}.md", mime="text/markdown")
 
-    # Zotero save logic
-    if save_to_zotero:
-        try:
-            before = len(zotero_client.items())
-            save_article_to_zotero(article, analysis, zotero_client, allow_duplicates)
-            after = len(zotero_client.items())
-            if after > before:
-                saved_count += 1
-            else:
+        if save_to_zotero:
+            try:
+                before = len(zotero_client.items())
+                save_article_to_zotero(article, analysis, zotero_client, allow_duplicates)
+                after = len(zotero_client.items())
+                if after > before:
+                    saved_count += 1
+                else:
+                    skipped_count += 1
+            except Exception as e:
+                st.error(f"❌ Zotero error: {e}")
                 skipped_count += 1
-        except Exception as e:
-            st.error(f"❌ Zotero error: {e}")
-            skipped_count += 1
 
-# Summary
-if save_to_zotero:
-    st.markdown("---")
-    st.success(f"📦 Zotero Summary: Saved {saved_count} | Skipped {skipped_count}")
-
-
-
-
-
-
-
+    if save_to_zotero:
+        st.markdown("---")
+        st.success(f"📦 Zotero Summary: Saved {saved_count} | Skipped {skipped_count}")
 
 
 
