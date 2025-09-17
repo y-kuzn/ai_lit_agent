@@ -6,6 +6,10 @@ import re
 from pyzotero import zotero
 import fitz  # PyMuPDF
 
+import streamlit as st
+import requests
+from pyzotero import zotero
+
 # ---------------------------
 # Page Configuration
 # ---------------------------
@@ -17,41 +21,62 @@ st.set_page_config(
 )
 
 # ---------------------------
-# Sidebar: Help Button
+# Sidebar Layout
 # ---------------------------
-st.sidebar.markdown("---")
-st.sidebar.markdown("""
-<div style="text-align: center;">
-    <a href="https://ntu-ai-literature-search-question.streamlit.app/" target="_blank">
-        <button style="
-            background-color: #ff4b5c;
-            color: white;
-            padding: 14px 28px;
-            margin-top: 15px;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transition: transform 0.2s ease, background-color 0.3s ease;
-        " onmouseover="this.style.backgroundColor='#e63946'; this.style.transform='scale(1.05)'" onmouseout="this.style.backgroundColor='#ff4b5c'; this.style.transform='scale(1)'">
-            🆘 HELP ME! I’m Lost
-        </button>
-    </a>
-</div>
-""", unsafe_allow_html=True)
+with st.sidebar:
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center;">
+        <a href="https://ntu-ai-literature-search-question.streamlit.app/" target="_blank">
+            <button style="
+                background-color: #ff4b5c;
+                color: white;
+                padding: 14px 28px;
+                margin-top: 15px;
+                border: none;
+                border-radius: 10px;
+                font-size: 18px;
+                font-weight: bold;
+                box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+                cursor: pointer;
+                transition: transform 0.2s ease, background-color 0.3s ease;
+            " onmouseover="this.style.backgroundColor='#e63946'; this.style.transform='scale(1.05)'" onmouseout="this.style.backgroundColor='#ff4b5c'; this.style.transform='scale(1)'">
+                🆘 HELP ME! I’m Lost
+            </button>
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
 
-# ---------------------------
-# Sidebar: Controls
-# ---------------------------
-st.sidebar.title("🔧 Settings")
-source = st.sidebar.selectbox("Choose source", ["Google Scholar", "Semantic Scholar", "PubMed"])
-query = st.sidebar.text_input("Enter your research topic")
-num_papers = st.sidebar.slider("Number of papers", 5, 50, 10)
-min_score = st.sidebar.slider("Minimum relevance score", 0.0, 1.0, 0.5)
-save_to_zotero = st.sidebar.checkbox("Save to Zotero", value=False)
-allow_duplicates = st.sidebar.checkbox("Allow duplicate saves", value=False)
+    st.title("🔧 Settings")
+    source = st.selectbox("Choose source", ["Google Scholar", "Semantic Scholar", "PubMed"])
+    query = st.text_input("Enter your research topic")
+
+    # Smart suggestion based on query length
+    suggested_num = 10 if len(query) < 20 else 20 if len(query) < 50 else 30
+    st.markdown(f"**Number of papers to fetch** (5–50) — Suggested: {suggested_num}")
+    num_papers_input = st.text_input("Enter number", value=str(suggested_num))
+    try:
+        num_papers = int(num_papers_input)
+        if not 5 <= num_papers <= 50:
+            st.error("❌ Please enter a number between 5 and 50.")
+            st.stop()
+    except ValueError:
+        st.error("❌ Invalid format. Please enter a whole number.")
+        st.stop()
+
+    st.markdown("**Minimum relevance score** (0.0–1.0) — Suggested: 0.5")
+    min_score_input = st.text_input("Enter score", value="0.5")
+    try:
+        min_score = float(min_score_input)
+        if not 0.0 <= min_score <= 1.0:
+            st.error("❌ Score must be between 0.0 and 1.0.")
+            st.stop()
+    except ValueError:
+        st.error("❌ Invalid format. Please enter a decimal number.")
+        st.stop()
+
+    save_to_zotero = st.checkbox("Save to Zotero", value=False)
+    allow_duplicates = st.checkbox("Allow duplicate saves", value=False)
 
 # ---------------------------
 # Secrets Configuration
@@ -59,19 +84,13 @@ allow_duplicates = st.sidebar.checkbox("Allow duplicate saves", value=False)
 SCRAPERAPI_KEY = st.secrets["SCRAPERAPI_KEY"]
 SEMANTIC_SCHOLAR_API_KEY = st.secrets["SEMANTIC_SCHOLAR_API_KEY"]
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-
-# ---------------------------
-# Main Title
-# ---------------------------
-st.title("📚 AI Literature Helper")
-st.markdown("Search academic papers, analyze relevance with Gemini, and optionally save to Zotero.")
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 # ---------------------------
 # Gemini Analysis Function
 # ---------------------------
 def analyze_article(title, abstract):
-    prompt = f"Summarize this article and generate 5 relevant tags:\n\nTitle: {title}\nAbstract: {abstract}"
+    prompt = f"Write a natural summary and highlight key topics:\n\nTitle: {title}\nAbstract: {abstract}"
     headers = {
         "Content-Type": "application/json",
         "X-goog-api-key": GEMINI_API_KEY
@@ -149,8 +168,12 @@ if query:
         with st.spinner("Analyzing with Gemini..."):
             analysis = analyze_article(article["title"], article["abstract"])
 
-        st.markdown("**🧠 AI Summary & Tags:**")
-        st.code(analysis)
+        st.markdown("**🧠 Gemini Insight:**")
+        st.markdown(f"""
+        <div style='background-color:#f9f9f9; padding:10px; border-radius:6px; font-size:16px'>
+        {analysis}
+        </div>
+        """, unsafe_allow_html=True)
 
         with st.expander("📤 Export Options"):
             bibtex = f"""@article{{{{{article['doi'].split('/')[-1]}}}}},
@@ -166,7 +189,7 @@ if query:
             markdown = f"""### {article['title']}
 **Abstract:** {article['abstract']}
 
-**Tags:**  
+**Gemini Insight:**  
 {analysis}
 
 [🔗 View Article]({article['url']})
