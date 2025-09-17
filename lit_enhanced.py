@@ -239,7 +239,7 @@ if st.button("🚀 Fetch & Analyze Articles"):
             st.markdown(f"**🔢 AI Relevance Score:** {score:.2f}")
             st.markdown(f"**🧠 Gemini Reasoning:** {reasoning}")
             if tags:
-    st.markdown("**🏷️ Tags:** " + ", ".join(tags))
+                st.markdown("**🏷️ Tags:** " + ", ".join(tags))
 
 # Export options
 st.download_button(
@@ -301,3 +301,4 @@ if score >= min_score and add_to_zotero and zot and user_zotero_collection:
             st.success(f"✅ Added to Zotero (score {score:.2f})")
         except Exception as e:
             st.error(f"❌ Zotero error: {e}")
+
