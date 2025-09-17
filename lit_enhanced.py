@@ -222,26 +222,23 @@ if st.button("🚀 Fetch & Analyze Articles"):
             4. Reasoning for the score
             Output as JSON with keys: tags, summary, score, reasoning
             """
-try:
-    text_output = generate_gemini(gemini_prompt)
-    gpt_data = extract_json(text_output)
-    tags = gpt_data.get("tags", [])
-    summary = gpt_data.get("summary", "")
-    score = float(gpt_data.get("score", 0))
-    reasoning = gpt_data.get("reasoning", "")
-except Exception as e:
-    st.error(f"Gemini API error: {e}")
-    tags, summary, score, reasoning = [], "", 0.0, ""
+            try:
+                text_output = generate_gemini(gemini_prompt)
+                gpt_data = extract_json(text_output)
+                tags = gpt_data.get("tags", [])
+                summary = gpt_data.get("summary", "")
+                score = float(gpt_data.get("score", 0))
+                reasoning = gpt_data.get("reasoning", "")
+            except Exception as e:
+                st.error(f"Gemini API error: {e}")
+                tags, summary, score, reasoning = [], "", 0.0, ""
 
-# Display article metadata
-st.markdown(f"### 📄 [{title}]({url})")
-st.markdown(f"**Authors:** {authors_info}")
-st.markdown(f"**Snippet:** {snippet}")
-
-# Display Gemini analysis
-st.markdown(f"**🔢 AI Relevance Score:** {score:.2f}")
-st.markdown(f"**🧠 Gemini Reasoning:** {reasoning}")
-if tags:
+            st.markdown(f"### 📄 [{title}]({url})")
+            st.markdown(f"**Authors:** {authors_info}")
+            st.markdown(f"**Snippet:** {snippet}")
+            st.markdown(f"**🔢 AI Relevance Score:** {score:.2f}")
+            st.markdown(f"**🧠 Gemini Reasoning:** {reasoning}")
+            if tags:
     st.markdown("**🏷️ Tags:** " + ", ".join(tags))
 
 # Export options
@@ -268,7 +265,7 @@ st.download_button(
 
 st.markdown("---")
 
-# Zotero logic
+# Zotero logic with duplicate check and override
 if score >= min_score and add_to_zotero and zot and user_zotero_collection:
     item = {
         'itemType': 'journalArticle',
@@ -280,7 +277,6 @@ if score >= min_score and add_to_zotero and zot and user_zotero_collection:
         'collections': [user_zotero_collection]
     }
 
-    # Check for duplicates
     duplicate_found = False
     try:
         existing_items = zot.items(q=title, itemType="journalArticle")
@@ -305,10 +301,3 @@ if score >= min_score and add_to_zotero and zot and user_zotero_collection:
             st.success(f"✅ Added to Zotero (score {score:.2f})")
         except Exception as e:
             st.error(f"❌ Zotero error: {e}")
-
-
-
-
-
-
-
