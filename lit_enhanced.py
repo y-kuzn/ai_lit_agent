@@ -1,4 +1,4 @@
-fimport streamlit as st
+import streamlit as st
 import requests
 import json
 from bs4 import BeautifulSoup
@@ -305,6 +305,7 @@ if score >= min_score and add_to_zotero and zot and user_zotero_collection:
             st.success(f"✅ Added to Zotero (score {score:.2f})")
         except Exception as e:
             st.error(f"❌ Zotero error: {e}")
+
 
 
 
